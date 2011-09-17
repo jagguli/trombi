@@ -624,6 +624,12 @@ class Document(collections.MutableMapping, TrombiObject):
     def __delitem__(self, key):
         del self.data[key]
 
+    def __getattr__(self, key):
+        try:
+            return self.get(key)
+        except KeyError as e:
+            raise AttributeError(e)
+
     def raw(self):
         result = {}
         if self.id:
@@ -774,8 +780,11 @@ class ViewResult(TrombiObject, collections.Sequence):
 
     def _format_row(self, row):
         if 'doc' in row and row['doc']:
-            row['doc'] = Document(self.db, row['doc'])
-        return row
+            doc = Document(self.db, row['doc'])
+        elif 'value' in row and row['value']:
+            doc = Document(self.db, row['value'])
+        doc['id'] = row['id']
+        return doc
 
     def __len__(self):
         return len(self._rows)
